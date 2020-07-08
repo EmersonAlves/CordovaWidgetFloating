@@ -1,0 +1,17 @@
+{
+  "name": "com.emersonar.plugin.widgetfloat",
+  "version": "1.0.0",
+  "description": "create floating widget native.",
+  "cordova": {
+    "id": "com.emersonar.plugin.widgetfloat",
+    "platforms": [
+      "android"
+    ]
+  },
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-android"
+  ],
+  "author": "Emerson Alves",
+  "license": "null"
+}
