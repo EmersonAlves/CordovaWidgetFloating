@@ -42,6 +42,8 @@ public class FloatingWidget extends CordovaPlugin {
     private static final int DRAW_OVER_OTHER_APP_PERMISSION = 4321;
     private LocationRequest locationRequest;
     private FusedLocationProviderClient fusedLocationClient;
+    private CallbackContext callbackContextPermission = null;
+    private final int CODE_REQUEST_PERMISSION =  1001;
 
     @Override
     public boolean execute(String action, JSONArray args,
@@ -51,6 +53,21 @@ public class FloatingWidget extends CordovaPlugin {
             openFloatingWidget();
             startObserver(args.getJSONObject(0));
            /// getPermissionLocationService(args.getJSONObject(0));
+            return true;
+        }
+
+        if (action.equals("askPermissionLocation")) {
+            callbackContextPermission = callbackContext;
+            cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    askPermissionLocation();
+                }
+            });
+            return true;
+        }
+
+        if(action.equals("getPermissionLocation")){
+            getPermissionLocation(callbackContext);
             return true;
         }
 
@@ -94,22 +111,87 @@ public class FloatingWidget extends CordovaPlugin {
         }
     }
 
-    private boolean askPermissionLocation() {
-        if (ActivityCompat.checkSelfPermission(cordova.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(cordova.getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(cordova.getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-                    1000);
+    private void getPermissionLocation(CallbackContext callbackContext) {
+        boolean permissionAccessCoarseLocationApproved =
+                ActivityCompat.checkSelfPermission(cordova.getContext(), Manifest.permission.ACCESS_COARSE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED;
 
-            return true;
-        } else {
-            return false;
+        if (permissionAccessCoarseLocationApproved) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                boolean backgroundLocationPermissionApproved =
+                        ActivityCompat.checkSelfPermission(cordova.getContext(),
+                                Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                                == PackageManager.PERMISSION_GRANTED;
+
+                if (!backgroundLocationPermissionApproved) {
+                    callbackContext.error("Não possui permissão");
+                } else {
+                    callbackContext.success();
+                }
+                return;
+            }
+            callbackContext.success();
         }
+
+        callbackContext.error("Não possui permissão");
+
     }
 
+    private void askPermissionLocation() {
+        boolean permissionAccessCoarseLocationApproved =
+                ActivityCompat.checkSelfPermission(cordova.getContext(), Manifest.permission.ACCESS_COARSE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED;
+
+        if (permissionAccessCoarseLocationApproved) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                boolean backgroundLocationPermissionApproved =
+                        ActivityCompat.checkSelfPermission(cordova.getContext(),
+                                Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                                == PackageManager.PERMISSION_GRANTED;
+
+                if (!backgroundLocationPermissionApproved) {
+                    cordova.requestPermissions(this, CODE_REQUEST_PERMISSION, new String[]{
+                            Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                    });
+                }
+            }
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                cordova.requestPermissions(this, CODE_REQUEST_PERMISSION, new String[]{
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                });
+            } else {
+                cordova.requestPermissions(this, CODE_REQUEST_PERMISSION, new String[]{
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                });
+            }
+        }
+    }
 
     private void closeFloatingWidget() {
         Intent intent = new Intent(cordova.getContext(), FloatingWidgetService.class);
         cordova.getContext().stopService(intent);
+    }
+
+
+
+    @Override
+    public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
+        super.onRequestPermissionResult(requestCode, permissions, grantResults);
+
+        if (requestCode == CODE_REQUEST_PERMISSION) {
+            if (grantResults.length > 0 &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (callbackContextPermission != null) {
+                    callbackContextPermission.success();
+                }
+            } else {
+                if (callbackContextPermission != null) {
+                    callbackContextPermission.error("Permissão recusada");
+                }
+            }
+        }
     }
 
 
