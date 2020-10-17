@@ -113,7 +113,7 @@ public class FloatingWidget extends CordovaPlugin {
 
     private void getPermissionLocation(CallbackContext callbackContext) {
         boolean permissionAccessCoarseLocationApproved =
-                ActivityCompat.checkSelfPermission(cordova.getContext(), Manifest.permission.ACCESS_COARSE_LOCATION)
+                ActivityCompat.checkSelfPermission(cordova.getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                         == PackageManager.PERMISSION_GRANTED;
 
         if (permissionAccessCoarseLocationApproved) {
@@ -139,14 +139,14 @@ public class FloatingWidget extends CordovaPlugin {
 
     private void askPermissionLocation() {
         boolean permissionAccessCoarseLocationApproved =
-                ActivityCompat.checkSelfPermission(cordova.getContext(), Manifest.permission.ACCESS_COARSE_LOCATION)
+                ActivityCompat.checkSelfPermission(cordova.getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                         == PackageManager.PERMISSION_GRANTED;
 
         if (permissionAccessCoarseLocationApproved) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 boolean backgroundLocationPermissionApproved =
                         ActivityCompat.checkSelfPermission(cordova.getContext(),
-                                Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                                Manifest.permission.ACCESS_FINE_LOCATION)
                                 == PackageManager.PERMISSION_GRANTED;
 
                 if (!backgroundLocationPermissionApproved) {
@@ -158,12 +158,12 @@ public class FloatingWidget extends CordovaPlugin {
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 cordova.requestPermissions(this, CODE_REQUEST_PERMISSION, new String[]{
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION,
                         Manifest.permission.ACCESS_BACKGROUND_LOCATION
                 });
             } else {
                 cordova.requestPermissions(this, CODE_REQUEST_PERMISSION, new String[]{
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION,
                 });
             }
         }
