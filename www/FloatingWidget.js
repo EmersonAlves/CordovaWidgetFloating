@@ -16,25 +16,13 @@ module.exports.close = function (successCallback, errorCallback) {
 }
 
 module.exports.getPermission = function (successCallback, errorCallback) {
-    cordova.exec(() => {
-        successCallback()
-    }, () => {
-        errorCallback()
-    }, "FloatingWidget", "getPermission", []);
+    cordova.exec(successCallback,errorCallback, "FloatingWidget", "getPermission", []);
 }
 
 module.exports.getPermissionLocation = function (successCallback, errorCallback) {
-    cordova.exec(() => {
-        successCallback()
-    }, () => {
-        errorCallback()
-    }, "FloatingWidget", "getPermissionLocation", []);
+    cordova.exec(successCallback,errorCallback, "FloatingWidget", "getPermissionLocation", []);
 }
 
 module.exports.askPermissionLocation = function (successCallback, errorCallback) {
-    cordova.exec(() => {
-        successCallback()
-    }, () => {
-        errorCallback()
-    }, "FloatingWidget", "askPermissionLocation", []);
+    cordova.exec(successCallback, errorCallback, "FloatingWidget", "askPermissionLocation", []);
 }

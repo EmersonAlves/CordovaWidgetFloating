@@ -43,7 +43,7 @@ public class FloatingWidget extends CordovaPlugin {
     private LocationRequest locationRequest;
     private FusedLocationProviderClient fusedLocationClient;
     private CallbackContext callbackContextPermission = null;
-    private final int CODE_REQUEST_PERMISSION =  1001;
+    private final int CODE_REQUEST_PERMISSION = 1001;
 
     @Override
     public boolean execute(String action, JSONArray args,
@@ -52,7 +52,7 @@ public class FloatingWidget extends CordovaPlugin {
         if (action.equals("open")) {
             openFloatingWidget();
             startObserver(args.getJSONObject(0));
-           /// getPermissionLocationService(args.getJSONObject(0));
+            /// getPermissionLocationService(args.getJSONObject(0));
             return true;
         }
 
@@ -66,7 +66,7 @@ public class FloatingWidget extends CordovaPlugin {
             return true;
         }
 
-        if(action.equals("getPermissionLocation")){
+        if (action.equals("getPermissionLocation")) {
             getPermissionLocation(callbackContext);
             return true;
         }
@@ -124,7 +124,15 @@ public class FloatingWidget extends CordovaPlugin {
                                 == PackageManager.PERMISSION_GRANTED;
 
                 if (!backgroundLocationPermissionApproved) {
-                    callbackContext.error("Não possui permissão");
+                    JSONObject jsonObject = new JSONObject();
+                    try {
+                        jsonObject.put("isPermissionBackground", true);
+                        jsonObject.put("message", "Apenas habilitado em primeiro plano");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    callbackContext.error(jsonObject);
                 } else {
                     callbackContext.success();
                 }
@@ -153,6 +161,19 @@ public class FloatingWidget extends CordovaPlugin {
                     cordova.requestPermissions(this, CODE_REQUEST_PERMISSION, new String[]{
                             Manifest.permission.ACCESS_BACKGROUND_LOCATION
                     });
+                } else {
+                    if (this.callbackContextPermission != null) {
+                        JSONObject jsonObject = new JSONObject();
+                        try {
+                            jsonObject.put("isPermissionBackground", true);
+                            jsonObject.put("message", "Apenas habilitado em primeiro plano");
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        Log.d("Permission",jsonObject.toString());
+
+                        this.callbackContextPermission.success(jsonObject);
+                    }
                 }
             }
         } else {
@@ -175,7 +196,6 @@ public class FloatingWidget extends CordovaPlugin {
     }
 
 
-
     @Override
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
         super.onRequestPermissionResult(requestCode, permissions, grantResults);
@@ -188,7 +208,10 @@ public class FloatingWidget extends CordovaPlugin {
                 }
             } else {
                 if (callbackContextPermission != null) {
-                    callbackContextPermission.error("Permissão recusada");
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("isPermissionBackground", false);
+                    jsonObject.put("message", "Permissão negada");
+                    this.callbackContextPermission.success(jsonObject);
                 }
             }
         }
