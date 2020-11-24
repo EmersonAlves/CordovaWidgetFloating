@@ -17,6 +17,8 @@ import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.RelativeLayout;
 
+import java.util.Calendar;
+
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class FloatingWidgetService extends Service {
@@ -24,6 +26,8 @@ public class FloatingWidgetService extends Service {
     private WindowManager mWindowManager;
     private View mOverlayView;
     int mWidth;
+    private static final int MAX_CLICK_DURATION = 200;
+    private long startClickTime;
 
     @Nullable
     @Override
@@ -80,9 +84,10 @@ public class FloatingWidgetService extends Service {
             }
         });
 
-        CircleImageView imageBtn = mOverlayView.findViewById(getApplication().getResources().getIdentifier("logoFocus","id",getPackageName()));
+      //  CircleImageView imageBtn = mOverlayView.findViewById(getApplication()
+      //          .getResources().getIdentifier("logoFocus","id",getPackageName()));
 
-        imageBtn.setOnTouchListener(new View.OnTouchListener() {
+        layout.setOnTouchListener(new View.OnTouchListener() {
             private int initialX;
             private int initialY;
             private float initialTouchX;
@@ -96,24 +101,24 @@ public class FloatingWidgetService extends Service {
                         initialY = params.y;
                         initialTouchX = event.getRawX();
                         initialTouchY = event.getRawY();
+                        startClickTime = Calendar.getInstance().getTimeInMillis();
                         return true;
 
                     case MotionEvent.ACTION_UP:
                         int middle = mWidth / 2;
                         float nearestXWall = params.x >= middle ? mWidth : 0;
 
-                        if (params.x == (int) nearestXWall) {
+                        long clickDuration = Calendar.getInstance().getTimeInMillis() - startClickTime;
+
+                        if (clickDuration < MAX_CLICK_DURATION) {
                             Intent launchIntent = getPackageManager().getLaunchIntentForPackage(getPackageName());
-                            if (launchIntent != null) {
-                                startActivity(launchIntent);//null pointer check in case package name was not found
-                            }
-                            return true;
+                            startActivity(launchIntent);
                         }
 
                         params.x = (int) nearestXWall;
                         mWindowManager.updateViewLayout(mOverlayView, params);
 
-                        return true;
+                        return false;
 
                     case MotionEvent.ACTION_MOVE:
                         //this code is helping the widget to move around the screen with fingers
