@@ -26,3 +26,8 @@ module.exports.getPermissionLocation = function (successCallback, errorCallback)
 module.exports.askPermissionLocation = function (successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, "FloatingWidget", "askPermissionLocation", []);
 }
+
+
+module.exports.askPermissionLocation = function (callback) {
+    cordova.exec(callback, ()=>{}, "FloatingWidget", "checkSystemOverlayPermission", []);
+}
