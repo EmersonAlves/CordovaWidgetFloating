@@ -66,6 +66,17 @@ public class FloatingWidget extends CordovaPlugin {
             return true;
         }
 
+        if (action.equals("checkSystemOverlayPermission")) {
+            JSONObject jsonObject = new JSONObject();
+            try {
+                jsonObject.put("status", checkSystemOverlayPermission());
+                callbackContext.success(jsonObject);
+            } catch (JSONException e) {
+                callbackContext.error("Ocorreu um erro ao obter status");
+            }
+            return true;
+        }
+
         if (action.equals("getPermissionLocation")) {
             getPermissionLocation(callbackContext);
             return true;
@@ -82,6 +93,10 @@ public class FloatingWidget extends CordovaPlugin {
         }
 
         return false; // Returning false results in a "MethodNotFound" error.
+    }
+
+    private boolean checkSystemOverlayPermission() {
+        return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(cordova.getContext()));
     }
 
     private void openFloatingWidget() {
@@ -170,7 +185,7 @@ public class FloatingWidget extends CordovaPlugin {
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        Log.d("Permission",jsonObject.toString());
+                        Log.d("Permission", jsonObject.toString());
 
                         this.callbackContextPermission.success(jsonObject);
                     }
