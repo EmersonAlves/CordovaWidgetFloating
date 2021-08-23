@@ -161,47 +161,27 @@ public class FloatingWidget extends CordovaPlugin {
     }
 
     private void askPermissionLocation() {
-        boolean permissionAccessCoarseLocationApproved =
-                ActivityCompat.checkSelfPermission(cordova.getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                        == PackageManager.PERMISSION_GRANTED;
+        boolean shouldProvideRationale =
+                ActivityCompat.shouldShowRequestPermissionRationale(cordova.getActivity(),
+                        android.Manifest.permission.ACCESS_FINE_LOCATION);
 
-        if (permissionAccessCoarseLocationApproved) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                boolean backgroundLocationPermissionApproved =
-                        ActivityCompat.checkSelfPermission(cordova.getContext(),
-                                Manifest.permission.ACCESS_FINE_LOCATION)
-                                == PackageManager.PERMISSION_GRANTED;
-
-                if (!backgroundLocationPermissionApproved) {
-                    cordova.requestPermissions(this, CODE_REQUEST_PERMISSION, new String[]{
-                            Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                    });
-                } else {
-                    if (this.callbackContextPermission != null) {
-                        JSONObject jsonObject = new JSONObject();
-                        try {
-                            jsonObject.put("isPermissionBackground", true);
-                            jsonObject.put("message", "Apenas habilitado em primeiro plano");
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                        Log.d("Permission", jsonObject.toString());
-
-                        this.callbackContextPermission.success(jsonObject);
-                    }
-                }
-            }
+        // Provide an additional rationale to the user. This would happen if the user denied the
+        // request previously, but didn't check the "Don't ask again" checkbox.
+        // Provide an additional rationale to the user. This would happen if the user denied the
+        // request previously, but didn't check the "Don't ask again" checkbox.
+        if (shouldProvideRationale) {
+            Log.i("WoosmapGeofencing", "Displaying permission rationale to provide additional context.");
+            ActivityCompat.requestPermissions(cordova.getActivity(),
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION},
+                    CODE_REQUEST_PERMISSION);
         } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                cordova.requestPermissions(this, CODE_REQUEST_PERMISSION, new String[]{
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                });
-            } else {
-                cordova.requestPermissions(this, CODE_REQUEST_PERMISSION, new String[]{
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                });
-            }
+            Log.i("WoosmapGeofencing", "Requesting permission");
+            // Request permission. It's possible this can be auto answered if device policy
+            // sets the permission in a given state or the user denied the permission
+            // previously and checked "Never ask again".
+            ActivityCompat.requestPermissions(cordova.getActivity(),
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION},
+                    CODE_REQUEST_PERMISSION);
         }
     }
 
