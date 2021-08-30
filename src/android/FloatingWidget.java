@@ -2,7 +2,9 @@ package com.emersonar.plugin.widgetfloat;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -35,6 +37,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Locale;
+
 import javax.annotation.Nullable;
 
 public class FloatingWidget extends CordovaPlugin {
@@ -44,6 +48,7 @@ public class FloatingWidget extends CordovaPlugin {
     private FusedLocationProviderClient fusedLocationClient;
     private CallbackContext callbackContextPermission = null;
     private final int CODE_REQUEST_PERMISSION = 1001;
+    private final int OVERLAY_REQUEST_CODE = 1002;
 
     @Override
     public boolean execute(String action, JSONArray args,
@@ -116,13 +121,29 @@ public class FloatingWidget extends CordovaPlugin {
     }
 
     private void askForSystemOverlayPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(cordova.getContext())) {
-
-            //If the draw over permission is not available to open the settings screen
-            //to grant the permission.
-            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:" + cordova.getContext().getPackageName()));
-            cordova.getActivity().startActivityForResult(intent, DRAW_OVER_OTHER_APP_PERMISSION);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(cordova.getContext())) {
+                if ("xiaomi".equals(Build.MANUFACTURER.toLowerCase(Locale.ROOT))) {
+                    final Intent intent =new Intent("miui.intent.action.APP_PERM_EDITOR");
+                    intent.setClassName("com.miui.securitycenter",
+                            "com.miui.permcenter.permissions.PermissionsEditorActivity");
+                    intent.putExtra("extra_pkgname", cordova.getActivity().getPackageName());
+                    new AlertDialog.Builder(cordova.getContext())
+                            .setTitle("Habilite as permissões adicionais")
+                            .setMessage("Você não receberá notificações enquanto o aplicativo estiver em segundo plano se desativar essas permissões")
+                            .setPositiveButton("Vá para as configurações", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    cordova.getActivity().startActivity(intent);
+                                }
+                            })
+                            .setIcon(android.R.drawable.ic_dialog_info)
+                            .setCancelable(false)
+                            .show();
+                }else {
+                    Intent overlaySettings = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + cordova.getActivity().getPackageName()));
+                    cordova.getActivity().startActivityForResult(overlaySettings, OVERLAY_REQUEST_CODE);
+                }
+            }
         }
     }
 
