@@ -113,7 +113,6 @@ public class FloatingWidget extends CordovaPlugin {
             if(object.has("urlLogo")) {
                 String url = object.getString("urlLogo");
                 intent.putExtra("urlLogo", url);
-                Toast.makeText(context, url, Toast.LENGTH_SHORT).show();
             }
             context.startService(intent);
         } else {

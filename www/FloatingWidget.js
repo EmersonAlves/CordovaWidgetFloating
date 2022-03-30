@@ -1,10 +1,10 @@
-module.exports.open = function ({url, userId, driverId, token}, successCallback, errorCallback) {
+module.exports.open = function ({url, userId, driverId, token, urlLogo}, successCallback, errorCallback) {
     cordova.exec(() => {
             successCallback()
         }, () => {
             errorCallback()
         }, "FloatingWidget", "open",
-        [{url, userId, driverId, token}]);
+        [{url, userId, driverId, token,urlLogo}]);
 };
 
 module.exports.close = function (successCallback, errorCallback) {
