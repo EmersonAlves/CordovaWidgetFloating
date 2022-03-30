@@ -55,8 +55,9 @@ public class FloatingWidget extends CordovaPlugin {
                            CallbackContext callbackContext) throws JSONException {
 
         if (action.equals("open")) {
-            openFloatingWidget();
-            startObserver(args.getJSONObject(0));
+            JSONObject object = args.getJSONObject(0);
+            openFloatingWidget(object);
+            startObserver(object);
             /// getPermissionLocationService(args.getJSONObject(0));
             return true;
         }
@@ -104,15 +105,17 @@ public class FloatingWidget extends CordovaPlugin {
         return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(cordova.getContext()));
     }
 
-    private void openFloatingWidget() {
+    private void openFloatingWidget(JSONObject object) throws JSONException {
         Activity context = cordova.getActivity();
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            context.startService(new Intent(cordova.getActivity(), FloatingWidgetService.class));
-            // finish();
-        } else if (Settings.canDrawOverlays(cordova.getActivity())) {
-            context.startService(new Intent(cordova.getActivity(), FloatingWidgetService.class));
-            // finish();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(cordova.getActivity())) {
+            Intent intent = new Intent(cordova.getActivity(), FloatingWidgetService.class);
+            if(object.has("urlLogo")) {
+                String url = object.getString("urlLogo");
+                intent.putExtra("urlLogo", url);
+                Toast.makeText(context, url, Toast.LENGTH_SHORT).show();
+            }
+            context.startService(intent);
         } else {
             askForSystemOverlayPermission();
             Toast.makeText(cordova.getActivity(), "You need System Alert Window Permission to do this", Toast.LENGTH_SHORT).show();

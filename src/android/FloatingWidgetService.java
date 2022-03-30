@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.view.Display;
@@ -16,6 +17,8 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.RelativeLayout;
+
+import com.squareup.picasso.Picasso;
 
 import java.util.Calendar;
 
@@ -33,6 +36,27 @@ public class FloatingWidgetService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Bundle extras = intent.getExtras();
+
+        if(extras != null) {
+            String url = (String) extras.get("urlLogo");
+
+            if(url != null) {
+                CircleImageView imageBtn = mOverlayView.findViewById(getApplication()
+                        .getResources().getIdentifier("logoFocus", "id", getPackageName()));
+
+                Picasso.get().load(url)
+                        .placeholder(getApplication().getResources().getIdentifier("icon", "mipmap", getPackageName()))
+                        .error(getApplication().getResources().getIdentifier("icon", "mipmap", getPackageName()))
+                        .into(imageBtn);
+            }
+        }
+
+        return super.onStartCommand(intent, flags, startId);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -83,9 +107,6 @@ public class FloatingWidgetService extends Service {
 
             }
         });
-
-      //  CircleImageView imageBtn = mOverlayView.findViewById(getApplication()
-      //          .getResources().getIdentifier("logoFocus","id",getPackageName()));
 
         layout.setOnTouchListener(new View.OnTouchListener() {
             private int initialX;
