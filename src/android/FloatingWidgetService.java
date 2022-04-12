@@ -38,7 +38,7 @@ public class FloatingWidgetService extends Service {
         return null;
     }
 
-    @Override
+/*    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Bundle extras = intent.getExtras();
 
@@ -57,7 +57,7 @@ public class FloatingWidgetService extends Service {
         }
 
         return super.onStartCommand(intent, flags, startId);
-    }
+    }*/
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
