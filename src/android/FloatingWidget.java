@@ -2,15 +2,20 @@ package com.emersonar.plugin.widgetfloat;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -33,6 +38,7 @@ import com.karumi.dexter.listener.single.PermissionListener;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,11 +50,13 @@ import javax.annotation.Nullable;
 public class FloatingWidget extends CordovaPlugin {
 
     private static final int DRAW_OVER_OTHER_APP_PERMISSION = 4321;
+    private static final int REQUEST_CODE_LOCATION = 1;
     private LocationRequest locationRequest;
     private FusedLocationProviderClient fusedLocationClient;
     private CallbackContext callbackContextPermission = null;
     private final int CODE_REQUEST_PERMISSION = 1001;
     private final int OVERLAY_REQUEST_CODE = 1002;
+    private BroadcastReceiver broadcastReceiver;
 
     @Override
     public boolean execute(String action, JSONArray args,
@@ -59,6 +67,14 @@ public class FloatingWidget extends CordovaPlugin {
             startObserver(args.getJSONObject(0));
             /// getPermissionLocationService(args.getJSONObject(0));
             return true;
+        }
+
+        if (action.equals("startLocationService")) {
+            requestCodeLocation(args.getJSONObject(0));
+        }
+
+        if (action.equals("stopLocationService")) {
+            stopLocationService();
         }
 
         if (action.equals("askPermissionLocation")) {
@@ -92,8 +108,36 @@ public class FloatingWidget extends CordovaPlugin {
             return true;
         }
 
+        if (action.equals("onListenerLocation")) {
+            cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    if (broadcastReceiver == null) {
+                        broadcastReceiver = new BroadcastReceiver() {
+                            @Override
+                            public void onReceive(Context context, Intent intent) {
+                                try {
+                                    JSONObject object = new JSONObject();
+                                    object.put("latitude", intent.getExtras().getDouble("latitude"));
+                                    object.put("longitude", intent.getExtras().getDouble("longitude"));
+                                    PluginResult pluginResult = new PluginResult(PluginResult.Status.OK,object.toString());
+                                    pluginResult.setKeepCallback(true);
+                                    callbackContext.sendPluginResult(pluginResult);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        };
+
+                        cordova.getActivity().registerReceiver(broadcastReceiver, new IntentFilter("location_update"));
+                    }
+                }
+            });
+            return true;
+        }
+
         if (action.equals("close")) {
             closeFloatingWidget();
+            stopLocationService();
             return true;
         }
 
@@ -124,7 +168,7 @@ public class FloatingWidget extends CordovaPlugin {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!Settings.canDrawOverlays(cordova.getContext())) {
                 if ("xiaomi".equals(Build.MANUFACTURER.toLowerCase(Locale.ROOT))) {
-                    final Intent intent =new Intent("miui.intent.action.APP_PERM_EDITOR");
+                    final Intent intent = new Intent("miui.intent.action.APP_PERM_EDITOR");
                     intent.setClassName("com.miui.securitycenter",
                             "com.miui.permcenter.permissions.PermissionsEditorActivity");
                     intent.putExtra("extra_pkgname", cordova.getActivity().getPackageName());
@@ -139,7 +183,7 @@ public class FloatingWidget extends CordovaPlugin {
                             .setIcon(android.R.drawable.ic_dialog_info)
                             .setCancelable(false)
                             .show();
-                }else {
+                } else {
                     Intent overlaySettings = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + cordova.getActivity().getPackageName()));
                     cordova.getActivity().startActivityForResult(overlaySettings, OVERLAY_REQUEST_CODE);
                 }
@@ -323,4 +367,57 @@ public class FloatingWidget extends CordovaPlugin {
                     }
                 });
     }
+
+    private boolean isLocationServiceRunning() {
+        ActivityManager activityManager =
+                (ActivityManager) cordova.getActivity().getSystemService(Context.ACTIVITY_SERVICE);
+
+        if (activityManager != null) {
+            for (ActivityManager.RunningServiceInfo service :
+                    activityManager.getRunningServices(Integer.MAX_VALUE)) {
+                if (LocationService.class.getName().equals(service.service.getClassName())) {
+                    if (service.foreground) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        return false;
+    }
+
+    private void startLocationService(JSONObject object) throws JSONException {
+        if (!isLocationServiceRunning()) {
+            Intent intent = new Intent(cordova.getActivity().getApplicationContext(), LocationService.class);
+            intent.setAction(Constants.ACTION_START_LOCATION_SERVICE);
+            intent.putExtra("url", object.getString("url"));
+            intent.putExtra("data", object.getString("data"));
+
+            cordova.getActivity().startService(intent);
+        }
+    }
+
+    private void stopLocationService() {
+        if (isLocationServiceRunning()) {
+            Intent intent = new Intent(cordova.getActivity().getApplicationContext(), LocationService.class);
+            intent.setAction(Constants.ACTION_STOP_LOCATION_SERVICE);
+            cordova.getActivity().stopService(intent);
+        }
+    }
+
+    private void requestCodeLocation(JSONObject object) {
+        if (ContextCompat.checkSelfPermission(cordova.getActivity().getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(cordova.getActivity(),
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_CODE_LOCATION);
+        } else {
+            try {
+                startLocationService(object);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 }

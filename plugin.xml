@@ -21,7 +21,7 @@
         <framework src="de.hdodenhof:circleimageview:3.0.1" />
         <framework src="com.android.volley:volley:1.1.1" />
         <framework src="com.android.support:support-compat:27.0.0" />
-        <framework src="com.google.android.gms:play-services-location:16.0.0" />
+        <framework src="com.google.android.gms:play-services-location:17.0.0" />
         <framework src="com.karumi:dexter:5.0.0" />
         <framework src="com.google.firebase:firebase-firestore:19.0.0" />
 
@@ -39,10 +39,11 @@
         <source-file src="src/android/FloatingWidgetService.java" target-dir="src/com/emersonar/plugin/widgetfloat" />
         <source-file src="src/android/LocationService.java" target-dir="src/com/emersonar/plugin/widgetfloat" />
         <source-file src="src/android/RequestApi.java" target-dir="src/com/emersonar/plugin/widgetfloat" />
+        <source-file src="src/android/Constants.java" target-dir="src/com/emersonar/plugin/widgetfloat" />
 
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
             <service android:name="com.emersonar.plugin.widgetfloat.FloatingWidgetService" />
-            <receiver android:name="com.emersonar.plugin.widgetfloat.LocationService" />
+            <service android:name="com.emersonar.plugin.widgetfloat.LocationService" android:enabled="true" android:exported="false" />
         </config-file>
 
         <resource-file src="res/layout/overlay_layout.xml" target="res/layout/overlay_layout.xml" />

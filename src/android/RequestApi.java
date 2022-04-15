@@ -19,19 +19,15 @@ import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 public class RequestApi {
+    private RequestQueue requestQueue;
 
     public static String HOST = "";
 
-    public static void sendPost(Context context, String path, JSONObject data, Map<String, String> headers) {
-        RequestQueue requestQueue = Volley.newRequestQueue(context);
-
-        final String url = HOST + path;
+    public void sendPost(Context context, String url, String requestBody, Map<String, String> headers) {
+        if (requestQueue == null)
+            requestQueue = Volley.newRequestQueue(context);
 
         final int type = Request.Method.POST;
-
-        final String requestBody = data.toString();
-
-        Toast.makeText(context,requestBody,Toast.LENGTH_LONG).show();
 
         StringRequest stringRequest = RequestApi.getStringRequest(type, url, requestBody, headers);
 

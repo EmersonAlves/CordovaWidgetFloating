@@ -31,3 +31,16 @@ module.exports.askPermissionLocation = function (successCallback, errorCallback)
 module.exports.checkSystemOverlayPermission = function (callback) {
     cordova.exec(callback, ()=>{}, "FloatingWidget", "checkSystemOverlayPermission", []);
 }
+
+module.exports.startLocationService = function (data,successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, "FloatingWidget", "startLocationService", [data]);
+}
+
+
+module.exports.stopLocationService = function (callback) {
+    cordova.exec(callback, ()=>{}, "FloatingWidget", "stopLocationService", []);
+}
+
+module.exports.onListenerLocation = function (callback) {
+    cordova.exec((data)=> callback(JSON.parse(data)), ()=>{}, "FloatingWidget", "onListenerLocation", []);
+}
