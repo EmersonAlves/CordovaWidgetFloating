@@ -30,8 +30,6 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-import br.com.taxireturn.driver.R;
-
 public class LocationService extends Service {
     private LocationCallback locationCallback = new LocationCallback() {
         @Override
@@ -94,7 +92,7 @@ public class LocationService extends Service {
                 channelId
         );
 
-        builder.setSmallIcon(R.mipmap.ic_launcher);
+        builder.setSmallIcon(getApplication().getResources().getIdentifier("ic_launcher", "drawable", getPackageName()));
         builder.setContentTitle("Radar de viagem");
         builder.setDefaults(NotificationCompat.DEFAULT_ALL);
         builder.setContentText("Filtrando viagens para seu perfil");
