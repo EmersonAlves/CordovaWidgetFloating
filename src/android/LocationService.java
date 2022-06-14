@@ -13,9 +13,9 @@ import android.location.Location;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.Looper;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NotificationCompat;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
 import android.util.Log;
 
 import com.google.android.gms.location.LocationCallback;
@@ -56,6 +56,7 @@ public class LocationService extends Service {
                         Intent intent = new Intent("location_update");
                         intent.putExtra("latitude",latitude);
                         intent.putExtra("longitude",longitude);
+
                         sendBroadcast(intent);
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -69,6 +70,8 @@ public class LocationService extends Service {
     private String url = null;
     private String data = null;
     public static final String ACTION_PROCESS_UPDATE = "com.emersonar.plugin.widgetfloat.UPDATE_LOCATION";
+    private long interval = 20000;
+    private long fastestInterval = 20000;
 
     @Nullable
     @Override
@@ -115,8 +118,8 @@ public class LocationService extends Service {
         }
 
         LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(10000);
-        locationRequest.setFastestInterval(12000);
+        locationRequest.setInterval(interval);
+        locationRequest.setFastestInterval(fastestInterval);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -151,6 +154,8 @@ public class LocationService extends Service {
                 if(action.equals(Constants.ACTION_START_LOCATION_SERVICE)){
                     url = intent.getExtras().getString("url");
                     data =  intent.getExtras().getString("data");
+                    interval = intent.getExtras().getLong("interval",20000);
+                    fastestInterval = intent.getExtras().getLong("fastestInterval",20000);
                     startLocationService();
                 } else if (action.equals(Constants.ACTION_STOP_LOCATION_SERVICE)){
                     stopLocationService();

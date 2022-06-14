@@ -14,8 +14,8 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -393,6 +393,12 @@ public class FloatingWidget extends CordovaPlugin {
             intent.setAction(Constants.ACTION_START_LOCATION_SERVICE);
             intent.putExtra("url", object.getString("url"));
             intent.putExtra("data", object.getString("data"));
+            if(object.has("interval")) {
+                intent.putExtra("interval", object.getLong("interval"));
+            }
+            if(object.has("fastestInterval")) {
+                intent.putExtra("fastestInterval", object.getLong("fastestInterval"));
+            }
 
             cordova.getActivity().startService(intent);
         }
